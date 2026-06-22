@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>TRPG Transcript Analyzer PoC</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="workspace" aria-label="TRPGセッション解析">
+        <div class="input-pane">
+          <div class="pane-header">
+            <div>
+              <p class="eyebrow">Zoom AI Services PoC</p>
+              <h1>TRPG Transcript Analyzer</h1>
+            </div>
+            <button id="loadSampleButton" class="ghost-button" type="button">サンプル</button>
+          </div>
+
+          <label class="field-label" for="characterName">キャラクター名</label>
+          <input id="characterName" class="text-input" value="探索者A" />
+
+          <label class="field-label" for="transcriptInput">文字起こしログ</label>
+          <textarea id="transcriptInput" spellcheck="false"></textarea>
+
+          <div class="actions">
+            <button id="analyzeButton" class="primary-button" type="button">解析</button>
+            <button id="resetButton" class="ghost-button" type="button">初期化</button>
+          </div>
+        </div>
+
+        <div class="dashboard">
+          <section class="status-grid" aria-label="キャラクターステータス">
+            <article class="metric">
+              <span>Character</span>
+              <strong id="characterNameView">探索者A</strong>
+            </article>
+            <article class="metric">
+              <span>HP</span>
+              <strong id="hpView">12</strong>
+            </article>
+            <article class="metric">
+              <span>SAN</span>
+              <strong id="sanView">60</strong>
+            </article>
+            <article class="metric">
+              <span>Last Dice</span>
+              <strong id="lastDiceView">-</strong>
+            </article>
+            <article class="metric">
+              <span>Result</span>
+              <strong id="judgementView">未判定</strong>
+            </article>
+          </section>
+
+          <section class="output-section">
+            <div class="section-header">
+              <h2>イベントログ</h2>
+              <span id="eventCount" class="count-badge">0</span>
+            </div>
+            <ol id="eventLog" class="event-log"></ol>
+          </section>
+
+          <section class="output-section">
+            <div class="section-header">
+              <h2>JSON出力</h2>
+            </div>
+            <pre id="jsonOutput" class="json-output">{}</pre>
+          </section>
+        </div>
+      </section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>
