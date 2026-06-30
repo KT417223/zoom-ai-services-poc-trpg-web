@@ -21,10 +21,12 @@ KP: 戦闘でHP-2です。`;
 
 const elements = {
   characterName: document.querySelector("#characterName"),
+  transcriptFile: document.querySelector("#transcriptFile"),
   transcriptInput: document.querySelector("#transcriptInput"),
   analyzeButton: document.querySelector("#analyzeButton"),
   resetButton: document.querySelector("#resetButton"),
   loadSampleButton: document.querySelector("#loadSampleButton"),
+  fileStatus: document.querySelector("#fileStatus"),
   characterNameView: document.querySelector("#characterNameView"),
   hpView: document.querySelector("#hpView"),
   sanView: document.querySelector("#sanView"),
@@ -47,6 +49,99 @@ function splitTranscript(text) {
     .split(/\r?\n/)
     .map((line) => line.trim())
     .filter(Boolean);
+}
+
+function isVttTimestamp(line) {
+  return /-->|^\d{1,2}:\d{2}(?::\d{2})?[.,]\d{3}/.test(line);
+}
+
+function stripVttCueSettings(line) {
+  return line.replace(/\s+align:\S+|\s+line:\S+|\s+position:\S+|\s+size:\S+/g, "");
+}
+
+function normalizeVttSpeakerTags(line) {
+  return line
+    .replace(/^<v\s+([^>]+)>\s*(.+)$/i, "$1: $2")
+    .replace(/<\/v>$/i, "")
+    .replace(/<[^>]+>/g, "");
+}
+
+function normalizeTranscriptText(text) {
+  return text
+    .replace(/^\uFEFF/, "")
+    .replace(/\r\n?/g, "\n")
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => {
+      if (!line) return false;
+      if (/^WEBVTT/i.test(line)) return false;
+      if (/^NOTE(?:\s|$)/i.test(line)) return false;
+      if (/^\d+$/.test(line)) return false;
+      if (isVttTimestamp(line)) return false;
+      return true;
+    })
+    .map(stripVttCueSettings)
+    .map(normalizeVttSpeakerTags)
+    .join("\n");
+}
+
+function formatTranscriptItem(item) {
+  if (typeof item === "string") {
+    return item;
+  }
+
+  if (!item || typeof item !== "object") {
+    return "";
+  }
+
+  const speaker = item.speaker || item.speaker_name || item.user_name || item.name || "";
+  const text = item.text || item.transcript || item.content || item.message || "";
+
+  if (!text) {
+    return "";
+  }
+
+  return speaker ? `${speaker}: ${text}` : text;
+}
+
+function findTranscriptArray(value) {
+  if (Array.isArray(value)) {
+    return value;
+  }
+
+  if (!value || typeof value !== "object") {
+    return null;
+  }
+
+  const keys = ["transcript", "transcripts", "segments", "items", "results", "records"];
+  for (const key of keys) {
+    if (Array.isArray(value[key])) {
+      return value[key];
+    }
+  }
+
+  return null;
+}
+
+function parseJsonTranscript(text) {
+  const parsed = JSON.parse(text);
+  const transcript = findTranscriptArray(parsed);
+
+  if (transcript) {
+    return transcript.map(formatTranscriptItem).filter(Boolean).join("\n");
+  }
+
+  return formatTranscriptItem(parsed) || JSON.stringify(parsed, null, 2);
+}
+
+function parseTranscriptFile(text, fileName) {
+  const extension = fileName.split(".").pop()?.toLowerCase();
+
+  if (extension === "json") {
+    return parseJsonTranscript(text);
+  }
+
+  return normalizeTranscriptText(text);
 }
 
 function addEvent(type, message, extra = {}) {
@@ -303,6 +398,8 @@ function reset() {
   state = structuredClone(initialState);
   elements.characterName.value = initialState.characterName;
   elements.transcriptInput.value = "";
+  elements.transcriptFile.value = "";
+  elements.fileStatus.textContent = "未選択";
   render();
 }
 
@@ -314,9 +411,31 @@ elements.analyzeButton.addEventListener("click", () => {
 elements.resetButton.addEventListener("click", reset);
 
 elements.loadSampleButton.addEventListener("click", () => {
+  elements.transcriptFile.value = "";
+  elements.fileStatus.textContent = "サンプルを読み込みました";
   elements.transcriptInput.value = sampleTranscript;
   analyzeTranscript(elements.transcriptInput.value, elements.characterName.value.trim());
   render();
+});
+
+elements.transcriptFile.addEventListener("change", async () => {
+  const file = elements.transcriptFile.files[0];
+  if (!file) {
+    elements.fileStatus.textContent = "未選択";
+    return;
+  }
+
+  try {
+    const rawText = await file.text();
+    const parsedText = parseTranscriptFile(rawText, file.name);
+    elements.transcriptInput.value = parsedText;
+    elements.fileStatus.textContent = `${file.name} を取り込みました`;
+    analyzeTranscript(parsedText, elements.characterName.value.trim());
+    render();
+  } catch (error) {
+    elements.fileStatus.textContent = "取り込みに失敗しました";
+    console.error(error);
+  }
 });
 
 elements.characterName.addEventListener("input", () => {

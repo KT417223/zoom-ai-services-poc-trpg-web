@@ -109,6 +109,7 @@ h2 {
 }
 
 .text-input,
+.file-input,
 textarea {
   width: 100%;
   border: 1px solid var(--line);
@@ -123,6 +124,23 @@ textarea {
   padding: 0 12px;
 }
 
+.file-upload {
+  display: grid;
+  gap: 8px;
+}
+
+.file-input {
+  min-height: 42px;
+  padding: 8px 12px;
+}
+
+.file-status {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
 textarea {
   min-height: 440px;
   resize: vertical;
@@ -131,6 +149,7 @@ textarea {
 }
 
 .text-input:focus,
+.file-input:focus,
 textarea:focus {
   border-color: var(--accent);
   box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.14);

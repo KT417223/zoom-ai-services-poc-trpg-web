@@ -21,6 +21,12 @@
           <label class="field-label" for="characterName">キャラクター名</label>
           <input id="characterName" class="text-input" value="探索者A" />
 
+          <label class="field-label" for="transcriptFile">文字起こしファイル</label>
+          <div class="file-upload">
+            <input id="transcriptFile" class="file-input" type="file" accept=".vtt,.txt,.json,text/vtt,text/plain,application/json" />
+            <span id="fileStatus" class="file-status">未選択</span>
+          </div>
+
           <label class="field-label" for="transcriptInput">文字起こしログ</label>
           <textarea id="transcriptInput" spellcheck="false"></textarea>
 
